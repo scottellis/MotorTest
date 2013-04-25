@@ -6,5 +6,6 @@ GeneratedFiles/
 *.sdf
 *.opensdf
 *.suo
+*.user
 ipch/
 Win32/
