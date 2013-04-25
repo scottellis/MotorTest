@@ -6,7 +6,7 @@
 #ifndef MOTORTEST_H
 #define MOTORTEST_H
 
-#include <QtWidgets/QMainWindow>
+#include <qmainwindow.h>
 #include <qlineedit.h>
 #include <qradiobutton.h>
 #include <qlabel.h>

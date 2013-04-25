@@ -4,7 +4,7 @@
  */
 
 #include "motortest.h"
-#include <QtWidgets/QApplication>
+#include <qapplication.h>
 
 int main(int argc, char *argv[])
 {
