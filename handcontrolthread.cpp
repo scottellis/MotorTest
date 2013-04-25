@@ -139,7 +139,7 @@ void HandControlThread::closeFiles()
 #ifdef Q_OS_WIN
 		qDebug("Closing pwm and gpio file handles");
 #else
-		if (pwmFileDescripts[i] >= 0) {
+		if (pwmFileDescriptors[i] >= 0) {
 			close(pwmFileDescriptors[i]);
 			pwmFileDescriptors[i] = -1;
 		}
