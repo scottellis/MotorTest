@@ -160,9 +160,8 @@ void MotorTest::layoutWindow()
 	hLayout->addWidget(m_actionStart);
 	m_actionStop = new QPushButton("Stop");
 	hLayout->addWidget(m_actionStop);
-	m_actionSpeed = new QPushButton("Speed...");
+    m_actionSpeed = new QPushButton("Speed");
 	hLayout->addWidget(m_actionSpeed);
-	hLayout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Fixed));
 	vLayout->addLayout(hLayout);
 
 	hLayout = new QHBoxLayout;
