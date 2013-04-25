@@ -301,11 +301,11 @@ void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
         }
 
 #ifndef Q_OS_WIN
-		fd = open(PWM_DEVICES[iFingerNum], O_RDWR);
+        fd = open(GPIO_DEVICES[iFingerNum], O_RDWR);
 
         if (fd < 0)
 		{
-            qDebug("HandControlThread::run: Could not open %s", PWM_DEVICES[iFingerNum]);
+            qDebug("HandControlThread::run: Could not open %s", GPIO_DEVICES[iFingerNum]);
 			return;
         }
 #endif
