@@ -62,9 +62,6 @@ signals:
     void fingerPositionUpdated();
     void batteryLevelUpdated();
     
-public slots:
-    void quit();
-
 protected:
 	
     void run();
@@ -84,6 +81,8 @@ protected:
 	void ReadBatteryLevel();
 	
 private:
+	void closeFiles();
+
 	bool m_done;
 
     /// file descriptors for each PWM output

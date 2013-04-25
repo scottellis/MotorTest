@@ -87,6 +87,7 @@ bool HandControlThread::startThread()
         if (pwmFileDescriptors[i] < 0)
         {
             qDebug("HandControlThread::run: Could not open %s", PWM_DEVICES[i]);
+			closeFiles();
 			return false;
         }
     }
@@ -97,6 +98,7 @@ bool HandControlThread::startThread()
         if (gpioFileDescriptors[i] < 0)
         {
             qDebug("HandControlThread::run: Could not open %s", GPIO_DEVICES[i]);			
+			closeFiles();
 			return false;
         }
     }
@@ -124,24 +126,32 @@ void HandControlThread::stopThread()
 	if (i == 10)
 		qDebug("Failed to stop HandControlThread");
 	
-	for (i = 0; i < NUM_FINGERS; i++) {
+	for (i = 0; i < NUM_FINGERS; i++)
+		SetPwmForFinger(0, i);
+
+	closeFiles();
+}
+
+void HandControlThread::closeFiles()
+{
+	for (int i = 0; i < NUM_FINGERS; i++) {
 		SetPwmForFinger(0, i);
 #ifdef Q_OS_WIN
 		qDebug("Closing pwm and gpio file handles");
 #else
-		close(pwmFileDescriptors[i]);
-		pwmFileDescriptors[i] = 0;
-		close(gpioFileDescriptors[i]);
-		gpioFileDescriptors[i] = 0;
+		if (pwmFileDescripts[i] >= 0) {
+			close(pwmFileDescriptors[i]);
+			pwmFileDescriptors[i] = -1;
+		}
+
+		if (gpioFileDescriptors[i] >= 0) {
+			close(gpioFileDescriptors[i]);
+			gpioFileDescriptors[i] = -1;
+		}
 #endif
 	}
 }
     
-void HandControlThread::quit()
-{
-    qDebug("Called HandControlThread::quit()");
-    QThread::quit();
-}
 
 /// set the drive level and implied direction
 /// iDriveLevel should be -100 - 100 where negative implies opening
@@ -274,12 +284,18 @@ void HandControlThread::SetPwmForFinger(int iValue, int iFingerNum)
 		qDebug("Turning off pwm for finger %d", iFingerNum);
 	else
 		qDebug("Writing %d to pwm for finger %d", iValue, iFingerNum);
-#else    
+#else
+/*    
     ssize_t writeRet = write(pwmFileDescriptors[iFingerNum], buf, strlen(buf));
     if (writeRet < 0)
     {
         qDebug("HandControlThread::SetPwmForFinger Error Writing, errno = %d", errno);
     }
+*/
+	if (iValue == 0)
+		qDebug("DEBUG: Would be turning off pwm for finger %d", iFingerNum);
+	else
+		qDebug("DEBUG: Would be writing %d to pwm for finger %d", iValue, iFingerNum);
 #endif
 }
 
