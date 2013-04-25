@@ -17,21 +17,17 @@ MotorTest::MotorTest(QWidget *parent)
 	layoutWindow();
 	initControls();
 
-// only works with Qt4
-#ifdef Q_WS_QWS
-	// remove title bar
 	setWindowFlags(Qt::CustomizeWindowHint);
-#endif
 
 	m_runSpeed = 70;
 	m_running = false;
 	m_newBatteryData = false;
 	m_newFingerPosData = false;
 
-	connect(ui.actionExit, SIGNAL(triggered()), SLOT(close()));
-	connect(ui.actionStart, SIGNAL(triggered()), SLOT(onStart()));
-	connect(ui.actionStop, SIGNAL(triggered()), SLOT(onStop()));
-	connect(ui.actionSpeed, SIGNAL(triggered()), SLOT(onSpeed()));
+	connect(m_actionExit, SIGNAL(clicked()), SLOT(close()));
+	connect(m_actionStart, SIGNAL(clicked()), SLOT(onStart()));
+	connect(m_actionStop, SIGNAL(clicked()), SLOT(onStop()));
+	connect(m_actionSpeed, SIGNAL(clicked()), SLOT(onSpeed()));
 
 	m_handThread = new HandControlThread();
 
@@ -89,8 +85,8 @@ void MotorTest::onStart()
 	m_directionBtn[0]->setEnabled(false);
 	m_directionBtn[1]->setEnabled(false);
 	m_applyDirectionBtn->setEnabled(false);
-	ui.actionStart->setEnabled(false);
-	ui.actionSpeed->setEnabled(false);
+	m_actionStart->setEnabled(false);
+	m_actionSpeed->setEnabled(false);
 
 	if (m_directionBtn[0]->isChecked())
 		speed[0] = -m_runSpeed;
@@ -110,8 +106,8 @@ void MotorTest::onStop()
 
 	m_directionBtn[0]->setEnabled(true);
 	m_directionBtn[1]->setEnabled(true);
-	ui.actionStart->setEnabled(true);
-	ui.actionSpeed->setEnabled(true);
+	m_actionStart->setEnabled(true);
+	m_actionSpeed->setEnabled(true);
 
 	speed[0] = 0;
 	speed[1] = 0;
@@ -132,15 +128,15 @@ void MotorTest::onSpeed()
 void MotorTest::onDirectionChange()
 {
 	m_applyDirectionBtn->setEnabled(true);
-	ui.actionStart->setEnabled(false);
-	ui.actionSpeed->setEnabled(false);
+	m_actionStart->setEnabled(false);
+	m_actionSpeed->setEnabled(false);
 }
 
 void MotorTest::onApplyDirection()
 {
 	m_applyDirectionBtn->setEnabled(false);
-	ui.actionStart->setEnabled(true);
-	ui.actionSpeed->setEnabled(true);
+	m_actionStart->setEnabled(true);
+	m_actionSpeed->setEnabled(true);
 }
 
 void MotorTest::initControls()
@@ -153,11 +149,23 @@ void MotorTest::initControls()
 
 void MotorTest::layoutWindow()
 {
-	setFixedSize(320, 240);
+	setMaximumSize(320, 240);
 
 	QVBoxLayout *vLayout = new QVBoxLayout;
 
 	QHBoxLayout *hLayout = new QHBoxLayout;
+	m_actionExit = new QPushButton("Exit");
+	hLayout->addWidget(m_actionExit);
+	m_actionStart = new QPushButton("Start");
+	hLayout->addWidget(m_actionStart);
+	m_actionStop = new QPushButton("Stop");
+	hLayout->addWidget(m_actionStop);
+	m_actionSpeed = new QPushButton("Speed...");
+	hLayout->addWidget(m_actionSpeed);
+	hLayout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Fixed));
+	vLayout->addLayout(hLayout);
+
+	hLayout = new QHBoxLayout;
 	m_directionBtn[0] = new QRadioButton("Open");
 	m_directionBtn[0]->setChecked(true);
 	hLayout->addWidget(m_directionBtn[0]);
@@ -184,9 +192,7 @@ void MotorTest::layoutWindow()
 		hLayout->addWidget(m_positionLbl[i]);
 	}
 	hLayout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Fixed));
-	group = new QGroupBox("Position");
-	group->setLayout(hLayout);
-	vLayout->addWidget(group);
+	vLayout->addLayout(hLayout);
 
 	vLayout->addSpacerItem(new QSpacerItem(10, 10, QSizePolicy::Fixed, QSizePolicy::Expanding));
 	

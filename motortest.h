@@ -55,6 +55,11 @@ private:
 	
 	HandControlThread *m_handThread;
 
+	QPushButton *m_actionExit;
+	QPushButton *m_actionStart;
+	QPushButton *m_actionStop;
+	QPushButton *m_actionSpeed;
+
 	QRadioButton *m_directionBtn[2];
 	QPushButton *m_applyDirectionBtn;
 	QLineEdit *m_speedEdit;
