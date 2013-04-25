@@ -107,6 +107,8 @@ bool HandControlThread::startThread()
 
 	start();
 
+    qDebug("HandControlThread started");
+
 	return true;
 }
 
@@ -313,9 +315,9 @@ void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
             value = '0';
         }
 
-#ifdef Q_OS_WIN
 		qDebug("Writing %c to gpio for finger %d", value, iFingerNum);
-#else
+
+#ifndef Q_OS_WIN
         ssize_t writeRet = write(gpioFileDescriptors[iFingerNum], &value, 1);
         if (writeRet < 0)
         {
@@ -342,13 +344,16 @@ void HandControlThread::UpdatePwmControlStates()
                 // do nothing - pwm value will be set in SetFingerDrive
                 break;
             case (PRE_WAIT_TO_CHANGE_DIR):
+                qDebug("PRE_WAIT_TO_CHANGE_DIR: finger%d", i);
                 pwmState[i] = RXED_WAIT_TO_CHANGE_DIR;
                 break;
             case (RXED_WAIT_TO_CHANGE_DIR):
+                qDebug("RXED_WAIT_TO_CHANGE_DIR: finger%d", i);
                 pwmState[i] = PRE_WAIT_TO_SET_PWR;
                 SetDirForFinger(fingerDirs[i], i);
                 break;
             case (PRE_WAIT_TO_SET_PWR):
+                qDebug("PRE_WAIT_TO_SET_PWR: finger%d", i);
                 pwmState[i] = PWM_NORMAL;
                 SetPwmForFinger(fingerPwmLevel[i], i);
                 break;
