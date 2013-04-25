@@ -5,7 +5,7 @@
 
 #include <qboxlayout.h>
 #include <qgroupbox.h>
-#include <qformLayout.h>
+#include <qformlayout.h>
 
 #include "motortest.h"
 #include "motorspeeddlg.h"
