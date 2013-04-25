@@ -1,0 +1,10 @@
+Makefile*
+Debug/
+Release/
+GeneratedFiles/
+*.o
+*.sdf
+*.opensdf
+*.suo
+ipch/
+Win32/
