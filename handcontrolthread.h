@@ -87,10 +87,7 @@ private:
 
     /// file descriptors for each PWM output
     int pwmFileDescriptors[NUM_FINGERS];
-    
-    /// file descriptors for each GPIO output
-    int gpioFileDescriptors[NUM_FINGERS];
-       
+           
     /// protects the PWM state data
     QMutex controlMutex;
     

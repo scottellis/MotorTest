@@ -62,7 +62,6 @@ HandControlThread::HandControlThread(QObject *parent) :
         batteryLevel = 0;
         
         pwmFileDescriptors[i] = -1;
-        gpioFileDescriptors[i] = -1;
         
         pwmState[i] = PWM_NORMAL;
     }
@@ -78,9 +77,9 @@ bool HandControlThread::startThread()
 		return false;
 
 #ifdef Q_OS_WIN
-	qDebug("Opening pwm and gpio file handles");
+	qDebug("Opening pwm file handles");
 #else
-    // open pwm and gpio files
+    // open pwm files
     for (int i = 0; i < NUM_FINGERS; i++)
     {
         pwmFileDescriptors[i] = open(PWM_DEVICES[i], O_RDWR);
@@ -91,18 +90,7 @@ bool HandControlThread::startThread()
 			return false;
         }
     }
-    
-    for (int i = 0; i < NUM_FINGERS; i++)
-    {
-        gpioFileDescriptors[i] = open(GPIO_DEVICES[i], O_RDWR);
-        if (gpioFileDescriptors[i] < 0)
-        {
-            qDebug("HandControlThread::run: Could not open %s", GPIO_DEVICES[i]);			
-			closeFiles();
-			return false;
-        }
-    }
-#endif
+ #endif
 	m_done = false;
 
 	start();
@@ -139,16 +127,11 @@ void HandControlThread::closeFiles()
 	for (int i = 0; i < NUM_FINGERS; i++) {
 		SetPwmForFinger(0, i);
 #ifdef Q_OS_WIN
-		qDebug("Closing pwm and gpio file handles");
+		qDebug("Closing pwm file handles");
 #else
 		if (pwmFileDescriptors[i] >= 0) {
 			close(pwmFileDescriptors[i]);
 			pwmFileDescriptors[i] = -1;
-		}
-
-		if (gpioFileDescriptors[i] >= 0) {
-			close(gpioFileDescriptors[i]);
-			gpioFileDescriptors[i] = -1;
 		}
 #endif
 	}
@@ -303,6 +286,8 @@ void HandControlThread::SetPwmForFinger(int iValue, int iFingerNum)
 
 void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
 {
+	int fd;
+
     if (iFingerNum < NUM_FINGERS)
     {
         char value;
@@ -315,14 +300,26 @@ void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
             value = '0';
         }
 
+#ifndef Q_OS_WIN
+		fd = open(PWM_DEVICES[iFingerNum], O_RDWR);
+
+        if (fd < 0)
+		{
+            qDebug("HandControlThread::run: Could not open %s", PWM_DEVICES[iFingerNum]);
+			return;
+        }
+#endif
+
 		qDebug("Writing %c to gpio for finger %d", value, iFingerNum);
 
 #ifndef Q_OS_WIN
-        ssize_t writeRet = write(gpioFileDescriptors[iFingerNum], &value, 1);
+        ssize_t writeRet = write(fd, &value, 1);
         if (writeRet < 0)
         {
             qDebug("HandControlThread::SetDirForFinger Error Writing, errno = %d", errno);
         }
+
+		close(fd);
 #endif
     }
     else
