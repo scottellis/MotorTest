@@ -10,6 +10,9 @@
 #include "motortest.h"
 #include "motorspeeddlg.h"
 
+#define DIR_OPEN 0
+#define DIR_CLOSE 1
+
 MotorTest::MotorTest(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -82,16 +85,16 @@ void MotorTest::onStart()
 {
 	qint16 speed[2];
 
-	m_directionBtn[0]->setEnabled(false);
-	m_directionBtn[1]->setEnabled(false);
+    m_directionBtn[DIR_OPEN]->setEnabled(false);
+    m_directionBtn[DIR_CLOSE]->setEnabled(false);
 	m_applyDirectionBtn->setEnabled(false);
 	m_actionStart->setEnabled(false);
 	m_actionSpeed->setEnabled(false);
 
-	if (m_directionBtn[0]->isChecked())
-		speed[0] = -m_runSpeed;
+    if (m_directionBtn[DIR_OPEN]->isChecked())
+        speed[0] = m_runSpeed;
 	else
-		speed[0] = m_runSpeed;
+        speed[0] = -m_runSpeed;
 
 	speed[1] = speed[0];
 
@@ -104,8 +107,8 @@ void MotorTest::onStop()
 {
 	qint16 speed[2];
 
-	m_directionBtn[0]->setEnabled(true);
-	m_directionBtn[1]->setEnabled(true);
+    m_directionBtn[DIR_OPEN]->setEnabled(true);
+    m_directionBtn[DIR_CLOSE]->setEnabled(true);
 	m_actionStart->setEnabled(true);
 	m_actionSpeed->setEnabled(true);
 
@@ -141,8 +144,8 @@ void MotorTest::onApplyDirection()
 
 void MotorTest::initControls()
 {
-	connect(m_directionBtn[0], SIGNAL(clicked()), SLOT(onDirectionChange()));
-	connect(m_directionBtn[1], SIGNAL(clicked()), SLOT(onDirectionChange()));
+    connect(m_directionBtn[DIR_OPEN], SIGNAL(clicked()), SLOT(onDirectionChange()));
+    connect(m_directionBtn[DIR_CLOSE], SIGNAL(clicked()), SLOT(onDirectionChange()));
 	connect(m_applyDirectionBtn, SIGNAL(clicked()), SLOT(onApplyDirection()));
 	m_applyDirectionBtn->setEnabled(false);
 }
@@ -165,11 +168,11 @@ void MotorTest::layoutWindow()
 	vLayout->addLayout(hLayout);
 
 	hLayout = new QHBoxLayout;
-	m_directionBtn[0] = new QRadioButton("Open");
-	m_directionBtn[0]->setChecked(true);
-	hLayout->addWidget(m_directionBtn[0]);
-	m_directionBtn[1] = new QRadioButton("Close");
-	hLayout->addWidget(m_directionBtn[1]);
+    m_directionBtn[DIR_OPEN] = new QRadioButton("Open");
+    m_directionBtn[DIR_OPEN]->setChecked(true);
+    hLayout->addWidget(m_directionBtn[DIR_OPEN]);
+    m_directionBtn[DIR_CLOSE] = new QRadioButton("Close");
+    hLayout->addWidget(m_directionBtn[DIR_CLOSE]);
 
 	m_applyDirectionBtn = new QPushButton("Apply");
 	hLayout->addWidget(m_applyDirectionBtn);
