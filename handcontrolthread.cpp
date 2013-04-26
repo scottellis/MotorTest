@@ -275,12 +275,6 @@ void HandControlThread::SetPwmForFinger(int iValue, int iFingerNum)
     {
         qDebug("HandControlThread::SetPwmForFinger Error Writing, errno = %d", errno);
     }
-/*
-	if (iValue == 0)
-		qDebug("DEBUG: Would be turning off pwm for finger %d", iFingerNum);
-	else
-		qDebug("DEBUG: Would be writing %d to pwm for finger %d", iValue, iFingerNum);
-*/
 #endif
 }
 
