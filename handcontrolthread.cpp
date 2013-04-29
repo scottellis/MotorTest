@@ -10,7 +10,7 @@
 #include <QEventLoop>
 #include "handcontrolthread.h"
 
-#ifndef Q_OS_WIN
+#ifdef Q_WS_QWS
 #include <sys/ioctl.h>
 #include <unistd.h>
 #endif
@@ -76,9 +76,7 @@ bool HandControlThread::startThread()
 	if (isRunning())
 		return false;
 
-#ifdef Q_OS_WIN
-	qDebug("Opening pwm file handles");
-#else
+#ifdef Q_QS_QWS
     // open pwm files
     for (int i = 0; i < NUM_FINGERS; i++)
     {
@@ -86,11 +84,13 @@ bool HandControlThread::startThread()
         if (pwmFileDescriptors[i] < 0)
         {
             qDebug("HandControlThread::run: Could not open %s", PWM_DEVICES[i]);
-			closeFiles();
-			return false;
+            closeFiles();
+            return false;
         }
     }
- #endif
+#else
+	qDebug("Opening pwm file handles");
+#endif
 	m_done = false;
 
 	start();
@@ -126,13 +126,13 @@ void HandControlThread::closeFiles()
 {
 	for (int i = 0; i < NUM_FINGERS; i++) {
 		SetPwmForFinger(0, i);
-#ifdef Q_OS_WIN
-		qDebug("Closing pwm file handles");
+#ifdef Q_WS_QWS
+        if (pwmFileDescriptors[i] >= 0) {
+            close(pwmFileDescriptors[i]);
+            pwmFileDescriptors[i] = -1;
+        }
 #else
-		if (pwmFileDescriptors[i] >= 0) {
-			close(pwmFileDescriptors[i]);
-			pwmFileDescriptors[i] = -1;
-		}
+		qDebug("Closing pwm file handles");
 #endif
 	}
 }
@@ -264,24 +264,19 @@ void HandControlThread::SetPwmForFinger(int iValue, int iFingerNum)
     char buf[10];
     sprintf(buf, "%d", iValue);
 
-#ifdef Q_OS_WIN
-	if (iValue == 0)
-		qDebug("Turning off pwm for finger %d", iFingerNum);
-	else
-		qDebug("Writing %d to pwm for finger %d", iValue, iFingerNum);
-#else  
+#ifdef Q_QS_QWS
     ssize_t writeRet = write(pwmFileDescriptors[iFingerNum], buf, strlen(buf));
     if (writeRet < 0)
     {
         qDebug("HandControlThread::SetPwmForFinger Error Writing, errno = %d", errno);
     }
+#else
+    qDebug("Finger[%d]: set PWM = %d", iFingerNum, iValue);
 #endif
 }
 
 void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
 {
-	int fd;
-
     if (iFingerNum < NUM_FINGERS)
     {
         char value;
@@ -294,8 +289,8 @@ void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
             value = '0';
         }
 
-#ifndef Q_OS_WIN
-        fd = open(GPIO_DEVICES[iFingerNum], O_RDWR);
+#ifdef Q_WS_QWS
+        int fd = open(GPIO_DEVICES[iFingerNum], O_RDWR);
 
         if (fd < 0)
 		{
@@ -304,9 +299,9 @@ void HandControlThread::SetDirForFinger(FingerDir iFingerDir, int iFingerNum)
         }
 #endif
 
-		qDebug("Writing %c to gpio for finger %d", value, iFingerNum);
+        qDebug("Finger[%d]: set GPIO = %c", iFingerNum, value);
 
-#ifndef Q_OS_WIN
+#ifdef Q_WS_QWS
         ssize_t writeRet = write(fd, &value, 1);
         if (writeRet < 0)
         {
@@ -395,7 +390,31 @@ void HandControlThread::ReadFingerPositions()
 {
 	quint16 samples[2];
 
-#ifdef Q_OS_WIN
+#ifdef Q_WS_QWS
+    char buff[25];
+
+    int fd = open(ADC_FINGER_POS_DEVICE, O_RDONLY);
+
+    if (fd < 0)
+    {
+        qDebug("HandControlThread::run: Could not open %s", ADC_FINGER_POS_DEVICE);
+        return;
+    }
+
+    memset(buff, 0, sizeof(buff));
+
+    if (read(fd, buff, 25) < 0)
+    {
+        qDebug("HandControlThread: error reading adc in 2 & 7, errno = %d", errno);
+    }
+    else
+    {
+        sscanf(buff, "%hd %hd", &samples[0], &samples[1]);
+        SetFingerPos(samples);
+    }
+
+    close(fd);
+#else
 	for (int i = 0; i < 2; i++) {
 		if (fingerPwmLevel[i] == 0) {
 			samples[i] = currPositionSample[i];
@@ -417,30 +436,6 @@ void HandControlThread::ReadFingerPositions()
 	}
 
 	SetFingerPos(samples);
-#else
-	char buff[25];
-
-    int fd = open(ADC_FINGER_POS_DEVICE, O_RDONLY);
-
-    if (fd < 0)
-    {
-        qDebug("HandControlThread::run: Could not open %s", ADC_FINGER_POS_DEVICE);
-		return;
-    }
-
-	memset(buff, 0, sizeof(buff));
-
-	if (read(fd, buff, 25) < 0)
-	{
-		qDebug("HandControlThread: error reading adc in 2 & 7, errno = %d", errno);
-	}
-	else
-	{
-		sscanf(buff, "%hd %hd", &samples[0], &samples[1]);
-		SetFingerPos(samples);             
-	}
-
-	close(fd);
 #endif
 }
 
@@ -448,36 +443,36 @@ void HandControlThread::ReadBatteryLevel()
 {
 	quint16 sample;
 
-#ifdef Q_OS_WIN
+#ifdef Q_WS_QWS
+    char buff[10];
+
+    int fd = open(ADC_BATTERY_DEVICE, O_RDONLY);
+
+    if (fd < 0)
+    {
+        qDebug("HandControlThread::run: Could not open %s", ADC_BATTERY_DEVICE);
+        return;
+    }
+
+    memset(buff, 0, sizeof(buff));
+
+    if (read(fd, buff, 10) < 0)
+    {
+        qDebug("HandControlThread: error reading adc in 3, errno = %d", errno);
+    }
+    else
+    {
+        sscanf(buff, "%hd", &sample);
+        SetBatteryLevel(sample);
+    }
+
+    close(fd);
+#else
 	if (batteryLevel == 0)
 		sample = 100;
 	else
 		sample = batteryLevel - 1;
 
 	SetBatteryLevel(sample);
-#else
-	char buff[10];
-
-	int fd = open(ADC_BATTERY_DEVICE, O_RDONLY);
-
-    if (fd < 0)
-    {
-        qDebug("HandControlThread::run: Could not open %s", ADC_BATTERY_DEVICE);
-		return;
-    }
-    
-	memset(buff, 0, sizeof(buff));
-
-	if (read(fd, buff, 10) < 0)
-	{
-		qDebug("HandControlThread: error reading adc in 3, errno = %d", errno);
-	}
-	else
-	{
-		sscanf(buff, "%hd", &sample);
-		SetBatteryLevel(sample);
-	}
-
-	close(fd);
 #endif
 }
